@@ -191,6 +191,10 @@ p,small,.muted{color:var(--muted);line-height:1.65}
 .workspace-main{min-width:0}
 #overview-section,#sources-section,#permissions-section,#create-user-section,#inventory-section{scroll-margin-top:95px}
 #inventory-section{margin-top:3px}
+.section-heading{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:28px 0 14px}
+.section-heading h2{font-size:19px;font-weight:660;letter-spacing:-.025em}
+.section-heading .muted{font-size:12px;margin:0}
+
 #inventory-section>.row{margin-bottom:8px}
 #inventory-section button#refresh{
   width:40px;height:40px;padding:0;border-radius:9px;font-size:22px
