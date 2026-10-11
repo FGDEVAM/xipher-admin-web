@@ -28,7 +28,7 @@ function openDetails(dev){
  $('drawerAndroid').textContent=String(dev.android??'—');
  $('drawerId').textContent=String(dev.id??'');
  const extra=$('drawerExtra');extra.replaceChildren();
- for(const [key,title] of [['manufacturer','Manufacturer'],['brand','Brand'],['sdk','Android SDK'],['appVersion','App version'],['networkType','Connection type'],['charging','Battery state']]){
+ for(const [key,title] of [['manufacturer','Manufacturer'],['brand','Brand'],['sdk','Android SDK'],['appVersion','App version'],['networkType','Network / provider'],['charging','Battery state'],['storage','Storage'],['cpu','CPU architecture'],['ip','IP address'],['simCount','SIM count']]){
    const value=dev[key];if(typeof value!=='string'||!value.trim())continue;
    const line=safeText('div','','extra-row');
    line.append(safeText('span',title),safeText('strong',value));
