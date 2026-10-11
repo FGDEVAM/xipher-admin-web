@@ -27,6 +27,13 @@ function openDetails(dev){
  $('drawerBattery').textContent=String(dev.battery??'—');
  $('drawerAndroid').textContent=String(dev.android??'—');
  $('drawerId').textContent=String(dev.id??'');
+ const extra=$('drawerExtra');extra.replaceChildren();
+ for(const [key,title] of [['manufacturer','Manufacturer'],['brand','Brand'],['sdk','Android SDK'],['appVersion','App version'],['networkType','Connection type'],['charging','Battery state']]){
+   const value=dev[key];if(typeof value!=='string'||!value.trim())continue;
+   const line=safeText('div','','extra-row');
+   line.append(safeText('span',title),safeText('strong',value));
+   extra.append(line);
+ }
  $('deviceDrawer').classList.remove('hidden');
 }
 function printInventory(){
@@ -54,7 +61,31 @@ function printInventory(){
  }
 }
 function printUsers(){const parent=$('usersList');parent.replaceChildren();for(const u of snapshot.users??[]){const row=safeText('div','','item');row.append(button(`${u.username} — ${u.enabled?'Active':'Disabled'}`,()=>chooseUser(u.id)));parent.append(row);}if(!parent.childNodes.length)parent.append(safeText('p','No APK users yet.','muted'));}
-function showSelection(){$('selectionPanel').classList.toggle('hidden',$('scope').value!=='selected');}
+function selectionIds(){return new Set($('selected').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean));}
+function renderDevicePicker(){
+ const parent=$('selectedDevicePicker');parent.replaceChildren();
+ const devices=snapshot?.devices??[],selected=selectionIds();
+ if(!devices.length){parent.append(safeText('p','No connected device inventory available.','muted'));return;}
+ for(const dev of devices){
+  const line=document.createElement('label');line.className='device-picker-row';
+  const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.className='checkbox';
+  checkbox.checked=selected.has(dev.id);checkbox.setAttribute('aria-label','Allow '+String(dev.name||dev.id));
+  const info=document.createElement('span');info.className='device-picker-meta';
+  info.append(safeText('strong',String(dev.name||'Android device')));
+  info.append(safeText('small',String(dev.id)));
+  checkbox.onchange=()=>{
+   const ids=selectionIds();
+   if(checkbox.checked)ids.add(dev.id);else ids.delete(dev.id);
+   $('selected').value=[...ids].join('\n');
+  };
+  line.append(checkbox,info);parent.append(line);
+ }
+}
+function showSelection(){
+ const visible=$('scope').value==='selected';
+ $('selectionPanel').classList.toggle('hidden',!visible);
+ if(visible)renderDevicePicker();
+}
 function chooseUser(id){selectedUser=id;const u=snapshot.users.find(x=>x.id===id);if(!u)return;
  $('noUser').classList.add('hidden');$('userForm').classList.remove('hidden');$('chosenUsername').textContent=u.username;
  $('maxDevices').value=u.max_devices;$('scope').value=u.scope;$('enabled').checked=u.enabled;
@@ -73,6 +104,7 @@ $('logout').onclick=async()=>{await sb.auth.signOut();showDashboard(false);selec
 $('sourceForm').onsubmit=async e=>{e.preventDefault();await act('addSource',{label:$('sourceName').value,url:$('sourceUrl').value,secret:$('sourceSecret').value});$('sourceSecret').value='';};
 $('createForm').onsubmit=async e=>{e.preventDefault();await act('createUser',{username:$('newUser').value,password:$('newPassword').value,maxDevices:Number($('newLimit').value)});$('newPassword').value='';};
 $('scope').onchange=showSelection;
+$('selected').addEventListener('input',renderDevicePicker);
 $('userForm').onsubmit=async e=>{e.preventDefault();if(!selectedUser)return;await act('updateUser',{uid:selectedUser,enabled:$('enabled').checked,mode:$('scope').value,maxDevices:Number($('maxDevices').value),selectedIds:$('selected').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)});};
 $('resetPass').onclick=async()=>{if(!selectedUser)return;const p=prompt('New password, minimum 12 characters');if(p!==null)await act('resetPassword',{uid:selectedUser,password:p});};
 $('deleteUser').onclick=async()=>{if(selectedUser&&confirm('Delete this APK user?')){const uid=selectedUser;selectedUser=null;$('userForm').classList.add('hidden');$('noUser').classList.remove('hidden');await act('deleteUser',{uid});}};
